@@ -1,8 +1,17 @@
 ---
-Sources:
+sources:
   button_file: "data/button.csv"
   lidar_file: "data/lidar.csv"
-OCOT:
-  OC: true
-  OT: true
-  threshold: 0.7
+eventType:
+  oc: true
+  ot: true
+  threshold:
+    description: "threshold on the duration of the press between oc (short) and ot (long)"
+    value: 0.7
+detection:
+  delta:
+    description: "threshold that separates latdist readings close in lateral distance"
+    value: 30
+  epsilon:
+    description: "threshold that separates readins close in time"
+    value: 0.02
