@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import yaml
 
+from event import *
+
 
 class BicycleSession:
     """
@@ -24,6 +26,9 @@ class BicycleSession:
 
         self.button_file = self.config["sources"]["button_file"]
         self.lidar_file = self.config["sources"]["lidar_file"]
+
+        self.delta = self.config["detection"]["delta"]["value"]
+        self.epsilon = self.config["detection"]["epsilon"]["value"]
 
         self.button_df = self.load_button_file()
         self.df_ot, self.df_oc = self.decide_otoc()
@@ -84,7 +89,10 @@ class BicycleSession:
             excerpt_end = ps
 
             excerpt_df = df.loc[(df["time"] > excerpt_start) & (df["time"] < excerpt_end)]
-            self.events.append(excerpt_df)
+            # print(excerpt_df)
+            e = Event(etype="ot", press_start=ps, excerpt=excerpt_df, delta=self.delta, epsilon=self.epsilon)
+            # print(e.p)
+            self.events.append(e)
 
             plt.scatter(range(len(excerpt_df["time"])), excerpt_df["distance"])
             plt.savefig(os.path.join("out", "test" + str(ps) + ".png"))

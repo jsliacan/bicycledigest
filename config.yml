@@ -10,8 +10,8 @@ eventType:
     value: 0.7
 detection:
   delta:
-    description: "threshold that separates latdist readings close in lateral distance"
+    description: "threshold that separates latdist readings close in lateral distance, in cm"
     value: 30
   epsilon:
-    description: "threshold that separates readins close in time"
-    value: 0.02
+    description: "threshold that separates readings close in time, in milliseconds"
+    value: 150

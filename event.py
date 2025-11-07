@@ -4,10 +4,15 @@ leidenalg repo:     https://github.com/vtraag/leidenalg
 """
 
 import logging
+import os
 
 import igraph as ig
 import leidenalg as la
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
+
+pd.options.mode.chained_assignment = None  # default='warn'
 
 
 class Event:
@@ -15,7 +20,7 @@ class Event:
     Class holding information on each 'event' (OC/OT).
     """
 
-    def __init__(self, etype: str, ps: pd.Timestamp, excerpt: pd.DataFrame, delta=30, epsilon=0.02) -> None:
+    def __init__(self, etype: str, press_start: pd.Timestamp, excerpt: pd.DataFrame, delta=30, epsilon=200) -> None:
         """
         Initialize an instance of Event.
 
@@ -27,7 +32,7 @@ class Event:
         """
 
         self.etype = etype
-        self.ps = ps
+        self.ps = press_start
         self.excerpt = excerpt
         self.delta = delta
         self.epsilon = epsilon
@@ -36,6 +41,7 @@ class Event:
         self.edges = self.make_edges()
         self.g = self.make_graph()
         self.p = self.find_partition()
+        self.part = self.select_part()
 
     def make_vertices(self) -> dict:
         """
@@ -53,6 +59,8 @@ class Event:
         Create a dict of edges with weights: {(i,j): w_ij}
         """
         n = len(self.vertices)
+        # print(n, "vertices")
+        # print(self.vertices)
         edges = {}
 
         if n < 2:
@@ -61,17 +69,21 @@ class Event:
 
         for i in range(1, n):
             ti, di = self.vertices[i]
-            for j in range(i - 1, -1, 0):
+            for j in range(i - 1, 0, -1):
                 tj, dj = self.vertices[j]
                 diff_d = abs(di - dj)
                 diff_t = abs(ti - tj)
 
-                if diff_d < self.delta and diff_t < self.epsilon:
-                    edges[(i, j)] = 1
-                elif diff_d < self.delta and diff_t > self.epsilon:
+                if diff_d < self.delta and diff_t < np.timedelta64(self.epsilon, "ms"):
+                    edges[(j, i)] = 1
+                elif diff_d < self.delta and diff_t > np.timedelta64(self.epsilon, "ms"):
                     for k in range(j + 1, i):
-                        if edges[(k, i)] == 1:
-                            edges[(j, k)] = 1
+                        if (k, i) in edges:
+                            # not sure if need next 2 lines (only consider vertices k which are close enough to j -- though in practice the first one will be like that)
+                            tk, dk = self.vertices[k]
+                            if abs(tk - tj) < np.timedelta64(self.epsilon, "ms"):
+                                edges[(j, i)] = 1
+                                break
                         else:
                             break
         return edges
@@ -80,8 +92,7 @@ class Event:
         """
         Construct a weighted graph based on the excerpt.
         """
-
-        return ig.Graph(self.edges.keys())  # only get keys (x,y) edges, itnore weights for now
+        return ig.Graph(self.edges.keys(), directed=False)  # only get keys (x,y) edges, ignore weights for now
 
     def find_partition(self) -> la.ModularityVertexPartition:
         """
@@ -89,3 +100,36 @@ class Event:
         """
 
         return la.find_partition(self.g, la.ModularityVertexPartition)
+
+    def select_part(self) -> list:
+        """
+        Return list of vertices that belong in the part corresponding to the vehicle.
+        """
+
+        part_candidates = []
+        part_avgs = []
+        for pt in self.p:
+            if len(pt) < 4:
+                continue
+            latdists_in_pt = [self.vertices[key][1] for key in pt]
+            avg_latdist = sum(d for d in latdists_in_pt) / len(latdists_in_pt)
+            part_candidates.append(pt)
+            part_avgs.append(avg_latdist)
+
+        return part_candidates[np.argmin(part_avgs)]
+
+    def plot_event(self) -> None:
+        """
+        Plot detected part against excerpt.
+        """
+
+        plt.clf()
+
+        verts = list(self.vertices.values())
+        unzipped = list(zip(*verts))
+        plt.scatter(unzipped[0], unzipped[1], color="b")
+
+        part_verts = list([self.vertices[x] for x in self.part])
+        part_unzipped = list(zip(*part_verts))
+        plt.scatter(part_unzipped[0], part_unzipped[1], color="r")
+        plt.savefig(os.path.join("out", "detection_" + self.etype + "_" + str(self.ps) + ".png"))
