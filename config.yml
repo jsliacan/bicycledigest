@@ -1,7 +1,9 @@
 ---
 sources:
+  description: "path of each file relative to the bicycledigest.py or absolute"
   button_file: "data/button.csv"
   lidar_file: "data/lidar.csv"
+  gps_file: "data/gps.csv"
 eventType:
   oc: true
   ot: true
