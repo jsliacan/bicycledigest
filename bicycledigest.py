@@ -17,12 +17,9 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(
     format="%(asctime)s.%(msecs)03d %(levelname)s %(message)s",
     encoding="utf-8",
-    level=logging.INFO,
+    level=logging.INFO,  # change to DEBUG for messages in event.py
     datefmt="%Y-%m-%d %H:%M:%S",
-    handlers=[
-        logging.FileHandler("digest.log"),
-        logging.StreamHandler(),  # logging 'info' level to console as well
-    ],
+    handlers=[logging.FileHandler("digest.log"), logging.StreamHandler()],  # logging to console as well
 )
 
 

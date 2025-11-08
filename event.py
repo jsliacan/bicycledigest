@@ -24,7 +24,7 @@ def make_vertices(excerpt_df: pd.DataFrame) -> dict:
 
     excerpt_df:     data frame with lidar excerpt based on a button press (event.excerpt)
     """
-    logging.info("Constructing vertices/nodes.")
+    logging.debug("Constructing vertices/nodes.")
 
     excerpt_df["vertex"] = list(zip(excerpt_df.time.values, excerpt_df.distance.values))
     V = {i: excerpt_df["vertex"].iloc[i] for i in range(len(excerpt_df["vertex"]))}
@@ -42,14 +42,14 @@ def make_edges(vertices: dict, delta: float, epsilon: int) -> dict:
     delta:          two latdists this close in distance can have an edge between them
     epsilon:        two latdists this close in time can have edge between them
     """
-    logging.info("Constructing edges and weights.")
+    logging.debug("Constructing edges and weights.")
 
     n = len(vertices)
     edges = {}
 
     if n < 2:
         logging.error("Not enough vertices in the graph: n = %d", n)
-    logging.info("Constructing edges.")
+    logging.debug("Constructing edges.")
 
     for i in range(1, n):
         ti, di = vertices[i]
@@ -83,7 +83,7 @@ def make_graph(vertices: dict, delta: float, epsilon: int) -> ig.Graph:
     delta:          two latdists this close in distance can have an edge between them
     epsilon:        two latdists this close in time can have edge between them
     """
-    logging.info("Constructing the graph.")
+    logging.debug("Constructing the graph.")
     edges = make_edges(vertices, delta, epsilon)
 
     return ig.Graph(edges.keys(), directed=False)  # only get keys (x,y) edges, ignore weights for now
@@ -99,7 +99,7 @@ def find_partition(g: ig.Graph, num_iters: int) -> la.ModularityVertexPartition:
     num_iters:      leidenalg uses randomness in heuristics; higher num_iters
                     makes it converge more
     """
-    logging.info("Partitioning the graph.")
+    logging.debug("Partitioning the graph.")
 
     return la.find_partition(g, la.ModularityVertexPartition, n_iterations=num_iters)
 
@@ -152,7 +152,7 @@ class Event:
         """
         Return event's hash (ID) from a button press timestamp (as string).
         """
-        logging.info("Hashing event's timestamp into an ID.")
+        logging.debug("Hashing event's timestamp into an ID.")
 
         h = hashlib.new("sha256")
         h.update(self.pe.strftime("%Y-%m-%d %H:%M:%S.%f").encode())
@@ -168,7 +168,7 @@ class Event:
         anything under 4 readings is not a car). Then take the lowest of the
         big parts.
         """
-        logging.info("Choosing the part (of the partition) corresponding to the event.")
+        logging.debug("Choosing the part (of the partition) corresponding to the event.")
 
         part_candidates = []
         part_avgs = []
@@ -194,11 +194,10 @@ class Event:
             logging.error("GPS trace not implemented.")
             return []
 
-        logging.info("Constructing GPS trace.")
+        logging.debug("Constructing GPS trace.")
 
         trace_end = self.ps  # beginning of the button press
         trace_start = pd.to_datetime(self.t_list[0], utc=True)  # first timestamp of the OT
-        print(type(trace_start), type(trace_end), type(gps_df["time"].iloc[0]))
         trace_df = gps_df.loc[(gps_df["time"] > trace_start) & (gps_df["time"] < trace_end)]
 
         return list(zip(trace_df.latitude.values, trace_df.longitude.values))
@@ -209,7 +208,7 @@ class Event:
         """
 
         plt.clf()
-        logging.info("Plotting event and savin figure.")
+        logging.debug("Plotting event and savin figure.")
         verts = list(self.vertices.values())
         unzipped = list(zip(*verts))
         # plt.xlim(0, 150)
