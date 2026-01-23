@@ -4,6 +4,7 @@ bicycledigest.py
 Package for processing data collected with the bicycle logger.
 """
 
+import argparse
 import logging
 import os
 
@@ -55,15 +56,27 @@ def tracking_density(s: BicycleSession) -> None:
 
 def main() -> None:
 
-    s = BicycleSession()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-b", "--ButtonFile", help="Path of the button file.")
+    parser.add_argument("-g", "--GPSFile", help="Path of the GPS file.")
+    parser.add_argument("-l", "--LidarFile", help="Path of the lidar file.")
+    args = parser.parse_args()
 
-    plt.clf()
-    for _, event in enumerate(s.events):
+    if args.ButtonFile and args.GPSFile and args.LidarFile:  # either all files passed in commandline
+        source_files = {"button_file": args.ButtonFile, "gps_file": args.GPSFile, "lidar_file": args.LidarFile}
+        s = BicycleSession(sources=source_files)
+    else:  # or all files come from config
+        s = BicycleSession()
 
-        plt.ylim(0, 500)
-        plt.plot(event.ld_list)
+    s.print_info()
 
-    plt.savefig(os.path.join("out", "all_ots.png"))
+    # plt.clf()
+    # for _, event in enumerate(s.events):
+    #
+    #     plt.ylim(0, 500)
+    #     plt.plot(event.ld_list)
+    #
+    # plt.savefig(os.path.join("out", "all_ots.png"))
 
 
 if __name__ == "__main__":

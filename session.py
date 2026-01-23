@@ -13,7 +13,7 @@ class BicycleSession:
     Class encapsulating the concept of a 'session' (1 ride).
     """
 
-    def __init__(self, config="config.yml") -> None:
+    def __init__(self, config="config.yml", sources={"": ""}) -> None:
 
         with open(config, encoding="utf-8", mode="r") as file:
             self.config = yaml.safe_load(file)
@@ -27,6 +27,10 @@ class BicycleSession:
         self.button_file = self.config["sources"]["button_file"]
         self.lidar_file = self.config["sources"]["lidar_file"]
         self.gps_file = self.config["sources"]["gps_file"]
+        if not "" in sources:
+            self.button_file = sources["button_file"]
+            self.lidar_file = sources["lidar_file"]
+            self.gps_file = sources["gps_file"]
 
         self.delta = self.config["detection"]["delta"]["value"]
         self.epsilon = self.config["detection"]["epsilon"]["value"]
