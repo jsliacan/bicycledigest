@@ -1,7 +1,7 @@
 [project]
 name = "bicycledigest"
 version = "0.1.0"
-description = "Add your description here"
+description = "Bicycle data digestion package"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

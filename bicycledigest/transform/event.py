@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import yaml
+from constants import *
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
@@ -114,7 +115,7 @@ class Event:
     def __init__(
         self,
         etype: str,
-        button_press: pd.DataFrame,
+        button_press: pd.Series,
         lidar_excerpt: pd.DataFrame,
         gps_excerpt: pd.DataFrame,
         delta=30,
@@ -221,7 +222,7 @@ class Event:
         part_verts = list([self.vertices[x] for x in self.part])
         part_unzipped = list(zip(*part_verts))
         plt.scatter(part_unzipped[0], part_unzipped[1], color="r")
-        plt.savefig(os.path.join("out", "detection_" + self.etype + "_" + self.hash + ".png"))
+        plt.savefig(os.path.join(REPOSITORY_PATH, "out", "detection_" + self.etype + "_" + self.hash + ".png"))
 
     def export_yaml(self) -> None:
         """
@@ -245,5 +246,7 @@ class Event:
             },
         }
 
-        with open(os.path.join("out", "detection_" + self.etype + "_" + self.hash + ".yaml"), "w") as yamlfile:
+        with open(
+            os.path.join(REPOSITORY_PATH, "out", "detection_" + self.etype + "_" + self.hash + ".yaml"), "w"
+        ) as yamlfile:
             yaml.dump(event_data, yamlfile, default_flow_style=False, sort_keys=False)

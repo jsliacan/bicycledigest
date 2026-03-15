@@ -1,15 +1,18 @@
 ---
 sources:
-  description: "path of each file relative to the bicycledigest.py or absolute"
+  description: "path of each file relative to the repository level"
   button_file: "data/button.csv"
   lidar_file: "data/lidar.csv"
   gps_file: "data/gps.csv"
+  radar_file: "data/radar.csv"
+
 eventType:
   oc: true
   ot: true
   threshold:
     description: "threshold on the duration of the press between oc (short) and ot (long)"
     value: 0.7
+
 detection:
   delta:
     description: "threshold that separates latdist readings close in lateral distance, in cm"

@@ -1,11 +1,10 @@
 import logging
-import os
 
-# import matplotlib.pyplot as plt
 import pandas as pd
 import yaml
-
-from event import *
+from constants import CONFIG_PATH, REPOSITORY_PATH
+from extract.sensor_files import *
+from transform.event import *
 
 
 class BicycleSession:
@@ -13,32 +12,37 @@ class BicycleSession:
     Class encapsulating the concept of a 'session' (1 ride).
     """
 
-    def __init__(self, config="config.yml", sources={"": ""}) -> None:
+    def __init__(self, config=CONFIG_PATH, sources={"": ""}) -> None:
 
-        with open(config, encoding="utf-8", mode="r") as file:
-            self.config = yaml.safe_load(file)
+        with open(config, encoding="utf-8", mode="r") as config_file:
+            self.config = yaml.safe_load(config_file)
 
+        # SOURCE FILES
+        self.button_file = os.path.join(REPOSITORY_PATH, self.config["sources"]["button_file"])
+        self.lidar_file = os.path.join(REPOSITORY_PATH, self.config["sources"]["lidar_file"])
+        self.gps_file = os.path.join(REPOSITORY_PATH, self.config["sources"]["gps_file"])
+        self.radar_file = os.path.join(REPOSITORY_PATH, self.config["sources"]["radar_file"])
+        if not "" in sources:
+            self.button_file = os.path.join(REPOSITORY_PATH, sources["button_file"])
+            self.lidar_file = os.path.join(REPOSITORY_PATH, sources["lidar_file"])
+            self.gps_file = os.path.join(REPOSITORY_PATH, sources["gps_file"])
+            self.radar_file = os.path.join(REPOSITORY_PATH, sources["radar_file"])
+
+        # DETECTION PARAMETERS
         self.threshold = -1
         if self.config["eventType"]["oc"] and self.config["eventType"]["ot"]:
             self.threshold = self.config["eventType"]["threshold"]["value"]
-
-        self.events = []
-
-        self.button_file = self.config["sources"]["button_file"]
-        self.lidar_file = self.config["sources"]["lidar_file"]
-        self.gps_file = self.config["sources"]["gps_file"]
-        if not "" in sources:
-            self.button_file = sources["button_file"]
-            self.lidar_file = sources["lidar_file"]
-            self.gps_file = sources["gps_file"]
-
         self.delta = self.config["detection"]["delta"]["value"]
         self.epsilon = self.config["detection"]["epsilon"]["value"]
 
-        self.button_df = self.load_button_file()
-        self.gps_df = self.load_gps_file()
-        self.lidar_df = self.load_lidar_file()
+        self.button_df = read_button_file(self.button_file)
+        self.gps_df = read_gps_file(self.gps_file)
+        self.lidar_df = read_lidar_file(self.lidar_file)
+        self.radar_df = read_radar_file(self.radar_file)
+
         self.df_ot, self.df_oc = self.decide_otoc()
+
+        self.events = []
         self.make_events()
 
     def print_info(self) -> None:
@@ -55,55 +59,6 @@ class BicycleSession:
         print("-" * 10)
         print("dataframe OCs:\n", self.df_oc)
         print("-" * 10 + "\n")
-
-    def load_button_file(self) -> pd.DataFrame:
-        """
-        Read in button file and return a dataframe.
-        """
-
-        filename = os.path.basename(self.button_file)
-
-        logging.info("Loading button CSV file: %s", filename)
-
-        df = pd.read_csv(self.button_file, on_bad_lines="skip")
-        df = df.loc[df["duration"] > 0.01]
-        df = df.assign(time=pd.to_datetime(df["time"]))  # convert string UTC time to pd.DateTime
-        df = df.assign(timedelta=pd.to_timedelta(df["duration"], unit="s"))  # timedelta = duration as pd.Timedelta
-        df = df.assign(press_start=df["time"] - df["timedelta"])
-
-        return df
-
-    def load_gps_file(self) -> pd.DataFrame:
-        """
-        Read in GPS file and return a dataframe.
-        """
-
-        filename = os.path.basename(self.gps_file)
-        logging.info("Loading gps CSV file: %s", filename)
-
-        df = pd.read_csv(self.gps_file, on_bad_lines="skip")
-        df = df.assign(time=pd.to_datetime(df["time"]))  # convert string UTC time to pd.DateTime
-        df = df.astype({"latitude": float, "longitude": float})  # make sure values are floats
-
-        return df
-
-    def load_lidar_file(self) -> pd.DataFrame:
-        """
-        Read in lidar file and return a dataframe.
-        """
-
-        filename = os.path.basename(self.lidar_file)
-
-        logging.info("Loading lidar CSV file: %s", filename)
-
-        df = pd.read_csv(self.lidar_file, on_bad_lines="skip")
-        df = df.assign(time=pd.to_datetime(df["time"]))  # convert strin UTC time to pd.DateTime
-
-        if "distance [cm]" in df.columns:
-            logging.info("Removing units from variable names in the header in %s.", filename)
-            df.rename(columns={"distance [cm]": "distance"}, inplace=True)
-
-        return df
 
     def make_events(self) -> None:
         """
