@@ -3,13 +3,18 @@ Process data from bicycle logger
 
 ## Usage
 
-1. Provide a correct `config.yaml`. It is expected to reside in the same directory as the main script (`bicycledigest.py`). 
+1. Provide a correct `config.yaml`. It is expected to reside in the same directory as `bicycledigest.py`. 
 2. Activate virtual environment (step 2 only) or set it up and install requirements if this is the first time.
     a. `python3 -m venv .venv`
     b. `source .venv/bin/activate`
     c. `pip install --upgrade pip`
     d. `pip install -r requirements.txt`
-3. Run the main script (which just executes `main()`).
+3. Run the `bicycledigest.py` script (which just executes `main()`).
+    a. Cmdline arguments with button, lidar, and gps filenames take precedence over entries in the `config.yaml`.
+    ```bash
+    python bicycledigest.py -b "data/button.csv" -g "data/gps.csv" -l "data/lidar.csv"
+    ```
+    Note that only if all filenames are given as arguments will the commandline options be respected.
 4. Collect your artifacts from `out` folder. 
 
 ## Example

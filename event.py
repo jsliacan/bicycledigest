@@ -6,12 +6,14 @@ leidenalg repo:     https://github.com/vtraag/leidenalg
 import hashlib
 import logging
 import os
+from datetime import datetime
 
 import igraph as ig
 import leidenalg as la
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import yaml
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
@@ -147,6 +149,7 @@ class Event:
         self.t_list = [self.vertices[x][0] for x in self.part]  # timestamps corresponding to OT/OC
         self.gps_trace = self.get_gps_trace(gps_excerpt)  # from OT/OC start till start of button press
         self.plot_event()
+        self.export_yaml()
 
     def get_hash(self) -> str:
         """
@@ -219,3 +222,28 @@ class Event:
         part_unzipped = list(zip(*part_verts))
         plt.scatter(part_unzipped[0], part_unzipped[1], color="r")
         plt.savefig(os.path.join("out", "detection_" + self.etype + "_" + self.hash + ".png"))
+
+    def export_yaml(self) -> None:
+        """
+        Export a YAML with Event attributes.
+        """
+        event_data = {
+            "event_hash": self.hash,
+            "event_type": self.etype,
+            "press_start": str(self.ps),
+            "press_end": str(self.pe),
+            "press_duration": str(self.pd),
+            "parameters": {"delta": self.delta, "epsilon": self.epsilon},
+            "lateral_distances": str([float(x) for x in self.ld_list]),
+            "ld_timestamps": str([x.astype(datetime) for x in self.t_list]),
+            "gps_trace": str([(float(x[0]), float(x[1])) for x in self.gps_trace]),
+            "helper_objects": {
+                "vertices": str(self.vertices),
+                "graph": self.g.summary(1),
+                "partition": str(self.p),
+                "part": str(self.part),
+            },
+        }
+
+        with open(os.path.join("out", "detection_" + self.etype + "_" + self.hash + ".yaml"), "w") as yamlfile:
+            yaml.dump(event_data, yamlfile, default_flow_style=False, sort_keys=False)
