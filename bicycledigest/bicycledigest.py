@@ -45,11 +45,11 @@ def main() -> None:
             "lidar_file": args.LidarFile,
             "radar_file": args.RadarFile,
         }
-        s = BicycleSession(sources=source_files)
+        BicycleSession(sources=source_files)
     else:  # or all files come from config
-        s = BicycleSession()
+        BicycleSession()
 
-    s.print_info()
+    # s.print_info()
 
 
 # ---------------------- RUNNING DIRECTLY

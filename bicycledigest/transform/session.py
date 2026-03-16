@@ -2,6 +2,7 @@ import logging
 
 import pandas as pd
 import yaml
+from analyze.analyze_session import *
 from constants import CONFIG_PATH, REPOSITORY_PATH
 from extract.sensor_files import *
 from transform.event import *
@@ -44,6 +45,8 @@ class BicycleSession:
 
         self.events = []
         self.make_events()
+
+        events_df = events_to_csv(self.events)
 
     def print_info(self) -> None:
         """
