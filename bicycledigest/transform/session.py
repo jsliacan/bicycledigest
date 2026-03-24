@@ -46,7 +46,25 @@ class BicycleSession:
         self.events = []
         self.make_events()
 
-        events_df = events_to_csv(self.events)
+        lonlatlist = self.construct_lonlat_list()
+        roads = get_road_info(lonlatlist, "drive")
+        for i, e in enumerate(self.events):
+            e.road_info = roads[i]
+
+        self.df_events = self.events_to_csv()
+
+    def construct_lonlat_list(self):
+        """
+        Return a list of [lon,lat] pairs one for each event.
+        """
+        logging.info("Constructing list of [lon,lat] pairs for all events.")
+
+        lonlatlist = []
+        for e in self.events:
+            # [lon,lat] pairs, in that order!
+            lonlatlist.append([float(e.gps_trace[0][1]), float(e.gps_trace[0][0])])
+
+        return lonlatlist
 
     def print_info(self) -> None:
         """
@@ -94,10 +112,6 @@ class BicycleSession:
             )
             self.events.append(e)
 
-            # plt.scatter(range(len(excerpt_df["time"])), excerpt_df["distance"])
-            # plt.savefig(os.path.join("out", "test" + e.hash + ".png"))
-            # plt.clf()
-
     def decide_otoc(self) -> tuple[pd.DataFrame, pd.DataFrame]:
         """
         Return dataframes for OT presses and OC presses based on button press
@@ -112,3 +126,65 @@ class BicycleSession:
         logging.info("Found %d OTs and %d OCs.", len(OTs), len(OCs))
 
         return OTs, OCs
+
+    def events_to_csv(self) -> pd.DataFrame:
+        """
+        Load all session events to a dataframe and dump them in a CSV file.
+
+        Return df.
+        """
+        events_filepath = os.path.join(REPOSITORY_PATH, "out", "events.csv")
+        logging.info("Dumping events to CSV file.")
+
+        hashes = []
+        types = []
+        times = []
+        min_lds = []
+        gps_lats = []
+        gps_lons = []
+
+        road_refs = []
+        road_types = []
+        road_maxspeeds = []
+        road_oneways = []
+        road_lanes = []
+        road_lengths = []
+        road_widths = []
+
+        for e in self.events:
+            hashes.append(e.hash)
+            types.append(e.etype)
+            times.append(float(e.t_list[0]))
+            min_lds.append(min(e.ld_list))
+            gps_lats.append(e.gps_trace[0][0])
+            gps_lons.append(e.gps_trace[0][1])
+            road_refs.append(e.road_info["ref"])
+            road_types.append(e.road_info["type"])
+            road_maxspeeds.append(e.road_info["maxspeed"])
+            road_oneways.append(e.road_info["oneway"])
+            road_lanes.append(e.road_info["numlanes"])
+            road_lengths.append(e.road_info["length"])
+            road_widths.append(e.road_info["width"])
+
+        df_events = pd.DataFrame(
+            {
+                "hash": hashes,
+                "type": types,
+                "time": times,
+                "latdist_min": min_lds,
+                "gps_lat": gps_lats,
+                "gps_lon": gps_lons,
+                "road_ref": road_refs,
+                "road_type": road_types,
+                "road_maxspeed": road_maxspeeds,
+                "road_oneway": road_oneways,
+                "road_lanes": road_lanes,
+                "road_length": road_lengths,
+                "road_width": road_widths,
+            }
+        )
+
+        # do not write the unnemaed index column to CSV
+        df_events.to_csv(events_filepath, index=False)
+
+        return df_events

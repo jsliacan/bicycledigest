@@ -149,6 +149,7 @@ class Event:
         self.ld_list = [self.vertices[x][1] for x in self.part]  # latdists corresponding to OT/OC
         self.t_list = [self.vertices[x][0] for x in self.part]  # timestamps corresponding to OT/OC
         self.gps_trace = self.get_gps_trace(gps_excerpt)  # from OT/OC start till start of button press
+        self.road_info = {}  # after all events are created, road info is retrieved for all of them at session level
         self.plot_event()
         self.export_yaml()
 
