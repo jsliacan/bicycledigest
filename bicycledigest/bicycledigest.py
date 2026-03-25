@@ -49,8 +49,6 @@ def main() -> None:
     else:  # or all files come from config
         BicycleSession()
 
-    # s.print_info()
-
 
 # ---------------------- RUNNING DIRECTLY
 

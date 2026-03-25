@@ -25,7 +25,7 @@ app.layout = [
     dbc.Row(
         [
             dbc.Col(dcc.Graph(id="histogram-lidar")),
-            dbc.Col(html.H2(children="Ban Cars!", style={"textAlign": "center"})),
+            dbc.Col(html.H2(children="Placeholder", style={"textAlign": "center"})),
         ]
     ),
 ]
@@ -46,9 +46,11 @@ def update_lidar_map(value):
         color_continuous_scale="solar",
         size_max=10,
         zoom=10,
+        hover_name="hash",
+        hover_data=["road_ref", "road_lanes", "road_maxspeed", "road_width", "road_oneway"],
+        title="Overtakes",
     )
 
-    # fig = px.scatter(dff, x="time", y="latdist_min", hover_data="latdist_min", color="latdist_min")
     return fig
 
 
@@ -58,7 +60,7 @@ def update_lidar_histogram(value):
     dff.reset_index(inplace=True)  # to have index accessible as a normal column
 
     # use x="index" if you want just enumerated ladtists plotted
-    fig = px.histogram(df, x="latdist_min")
+    fig = px.histogram(df, x="latdist_min", title="Lateral distances")
 
     return fig
 
