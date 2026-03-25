@@ -137,7 +137,7 @@ class Event:
         self.pd = button_press["duration"]
         self.delta = delta
         self.epsilon = epsilon
-        self.hash = self.get_hash()
+        self.hash = self.get_hash()[:7]  # get only 7 char hash, should be enough
 
         # processing
         self.vertices = make_vertices(lidar_excerpt)
