@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 """
 bicycledigest.py
 
@@ -57,6 +58,7 @@ def tracking_density(s: BicycleSession) -> None:
 def main() -> None:
 
     parser = argparse.ArgumentParser()
+    parser.add_argument("-o", "--OutputDir", help="Path to the output directory.", default="out")
     parser.add_argument("-b", "--ButtonFile", help="Path of the button file.")
     parser.add_argument("-g", "--GPSFile", help="Path of the GPS file.")
     parser.add_argument("-l", "--LidarFile", help="Path of the lidar file.")
@@ -64,9 +66,9 @@ def main() -> None:
 
     if args.ButtonFile and args.GPSFile and args.LidarFile:  # either all files passed in commandline
         source_files = {"button_file": args.ButtonFile, "gps_file": args.GPSFile, "lidar_file": args.LidarFile}
-        s = BicycleSession(sources=source_files)
+        s = BicycleSession(sources=source_files, output_dir=args.OutputDir)
     else:  # or all files come from config
-        s = BicycleSession()
+        s = BicycleSession(output_dir=args.OutputDir)
 
     s.print_info()
 

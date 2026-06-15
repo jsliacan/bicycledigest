@@ -13,7 +13,7 @@ class BicycleSession:
     Class encapsulating the concept of a 'session' (1 ride).
     """
 
-    def __init__(self, config="config.yml", sources={"": ""}) -> None:
+    def __init__(self, config="config.yml", sources={"": ""}, output_dir="out") -> None:
 
         with open(config, encoding="utf-8", mode="r") as file:
             self.config = yaml.safe_load(file)
@@ -23,7 +23,8 @@ class BicycleSession:
             self.threshold = self.config["eventType"]["threshold"]["value"]
 
         self.events = []
-
+        
+        self.output_dir = output_dir
         self.button_file = self.config["sources"]["button_file"]
         self.lidar_file = self.config["sources"]["lidar_file"]
         self.gps_file = self.config["sources"]["gps_file"]
@@ -128,6 +129,7 @@ class BicycleSession:
             edf_gps = gpsdf.loc[(gpsdf["time"] > excerpt_start) & (gpsdf["time"] < excerpt_end)]  # excerpt df for lidar
             e = Event(
                 etype="ot",
+                output_dir=self.output_dir,
                 button_press=bp,
                 lidar_excerpt=edf_lidar,
                 gps_excerpt=edf_gps,
